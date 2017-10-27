@@ -18,7 +18,6 @@ public class Grammer implements Serializable{
         firstMap = new HashMap<Character, TreeSet<Character>>();
         firstSetLength = new HashMap<Character, Integer>();
         statesMap = new HashMap<Integer, State>();
-        hadExtend = new boolean[100];
 
 
         // 计算分析器
@@ -36,6 +35,8 @@ public class Grammer implements Serializable{
      * 3. 终结符集合ntSet
      * 4. 非终结符到表达式的映射expressionMap
      * 5. First集合映射firstMap
+     * 6. First集合长度映射firstSetLength
+     * 7. 状态编号、项目集映射statesMap
      */
     private ArrayList<String> gsArray;
     private TreeSet<Character> nvSet;
@@ -44,7 +45,6 @@ public class Grammer implements Serializable{
     private HashMap<Character, TreeSet<Character>> firstMap;
     private HashMap<Character, Integer> firstSetLength;
     private HashMap<Integer, State> statesMap;
-    private boolean[] hadExtend;
 
 
     private void setGsArray(ArrayList<String> gsArrary) {
@@ -162,21 +162,57 @@ public class Grammer implements Serializable{
     /**
      * 增广函数
      * 注意：同样利用副本，不然又引发修改错误
+     * TODO: 加入firstBa集:判断当前nvItem的下一个是否合法，不合法返回'#'，合法返回first（B）
      * @param tempState 临时状态
      * @return 增广后的状态
      */
-    private State addProcToState(State tempState) {
+    private State addProcToState(State tempState, TreeSet<Character> addFirstBaSet) {
+        // 首先一定要对现有的表达式进行初始化（有的不用，没有的加,注意在加入表达式的过程中也要动态加入)
+        for(Lr1project tempProject : tempState.projectSet) {
+            if(!tempState.firstBaMap.containsKey(tempProject)) {
+                tempState.firstBaMap.put(tempProject, new TreeSet<Character>());
+            }
+        }
         int lastSum = 0;
+
         do{
             lastSum = tempState.projectSet.size();
             // 制作状态副本
             State copyState = (State) tempState.clone();
+            // 查看所有项目，寻找可以增广的（是非终结符的情况）
             for(Lr1project tempProject : copyState.projectSet) {
                 if(tempProject.pos < tempProject.getRight().length()) {
+                    // TODO：注意等等操作这里的pos+1加入！！！！！！！！！
                     Character nvItem = tempProject.getRight().charAt(tempProject.pos);
+                    //TODO: 加入firstBa集Here，只对非终结符拓展处理，这里开始曾广！！
                     if(nvSet.contains(nvItem)) {
                         for(String procItem : expressionMap.get(nvItem)) {
-                            tempState.projectSet.add(new Lr1project(nvItem + "->" + procItem, 0));
+                            Lr1project addProject = new Lr1project(nvItem + "->" + procItem, 0);
+                            tempState.projectSet.add(addProject);
+                            // 不存在才创建，否则会被覆盖的！
+                            if(!tempState.firstBaMap.containsKey(addProject)) {
+                                tempState.firstBaMap.put(addProject, new TreeSet<Character>());
+                            } else {
+                                continue;
+                            }
+                            // 获取当前表达式对应的firstBa映射
+                            TreeSet<Character> tempfirstBaSet = tempState.firstBaMap.get(addProject);
+                            // 不管发生什么先加入之前状态的,了里面只有一个'#'
+                            if(!addFirstBaSet.contains('#')) {
+                                tempfirstBaSet.addAll(addFirstBaSet);
+                            }
+                            if(tempProject.pos + 1 < tempProject.getRight().length()) {
+                                // 讨论后面一个是否终结符
+                                Character nextItem = tempProject.getRight().charAt(tempProject.pos + 1);
+                                if(ntSet.contains(nextItem)) {
+                                    tempfirstBaSet.add(nextItem);
+                                } else {
+                                    tempfirstBaSet.addAll(firstMap.get(nextItem));
+                                }
+                            } else if (tempfirstBaSet.isEmpty()) {
+                                // 后面是末尾,而且目前为空,则加入'#'
+                                tempfirstBaSet.add('#');
+                            }
                         }
                     }
                 }
@@ -195,7 +231,10 @@ public class Grammer implements Serializable{
         Lr1project startProjects = new Lr1project(startProc, 0);
         State startState = new State();
         startState.projectSet.add(startProjects);
-        startState = addProcToState(startState);
+        TreeSet<Character> tempSet = new TreeSet<Character>();
+        tempSet.add('#');
+        startState = addProcToState(startState, tempSet);
+        startState.firstBaMap.put(startProjects, tempSet);
         statesMap.put(0,startState);
 
         // 设立总状态数为1，判断有无增加状态数来决定是否退出循环
@@ -217,10 +256,31 @@ public class Grammer implements Serializable{
                     for (Lr1project projectItem : state.projectSet) {
                         Lr1project tempProject = checkNewProject(projectItem, nvntItem);
                         if (tempProject != null) {
+                            //TODO: 增广前先处理自己的firstBa！！
+                            tempSet = new TreeSet<Character>();
+//                            if(tempProject.pos + 1 < tempProject.getRight().length()) {
+//                                Character nextChar = tempProject.getRight().charAt(tempProject.pos + 1);
+//                                // 同上区分是否终结符
+//                                if(ntSet.contains(nextChar)) {
+//                                    tempSet.add(nextChar);
+//                                } else {
+//                                    tempSet.addAll(firstMap.get(nextChar));
+//                                }
+//                            } else {
+//                                tempSet.add('#');
+//                            }
+                            //System.out.println(stateID);
+                            if(stateID == 1 && nvntItem == 'a') {
+                                System.out.println("在这停顿！");
+                            }
+                            TreeSet<Character> addFirstBaSet = state.firstBaMap.get(projectItem);
+                            tempSet.addAll(addFirstBaSet);
+                            tempState.firstBaMap.put(tempProject, tempSet);
+                            // 处理增广
                             tempState.projectSet.add(tempProject);
                             tempState.projectSet.remove(projectItem);
                             //tempState = addProcToState(tempProject, tempState);
-                            tempState = addProcToState(tempState);
+                            tempState = addProcToState(tempState,  addFirstBaSet);
                         }
                     }
                     if (!statesMap.values().contains(tempState) && !tempState.projectSet.isEmpty()) {
@@ -294,9 +354,12 @@ class Lr1project implements Cloneable{
 class State implements Cloneable {
     State() {
         projectSet = new HashSet<Lr1project>();
+        firstBaMap = new HashMap<Lr1project, TreeSet<Character>>();
     }
 
     public HashSet<Lr1project> projectSet;
+    public HashMap<Lr1project, TreeSet<Character>> firstBaMap;
+
 
     @Override
     public Object clone() {
@@ -304,11 +367,18 @@ class State implements Cloneable {
         HashSet<Lr1project> tempSet = new HashSet<Lr1project>();
         tempSet.addAll(this.projectSet);
         state.projectSet = tempSet;
+        //TODO: 复制firstBaMap
+        HashMap<Lr1project, TreeSet<Character>> tempfirstBaMap = new HashMap<Lr1project, TreeSet<Character>>();
+        for(Lr1project lr1project : projectSet) {
+            tempfirstBaMap.put(lr1project, this.firstBaMap.get(lr1project));
+        }
+        state.firstBaMap = tempfirstBaMap;
         return state;
     }
 
     @Override
     public boolean equals(Object obj) {
+        // 判断相等的条件：项目集和firstBa集合群相等
         State state = (State) obj;
         HashSet<Lr1project> set1 = this.projectSet;
         HashSet<Lr1project> set2 = state.projectSet;
@@ -321,16 +391,37 @@ class State implements Cloneable {
             return false;
         }
 
-        Iterator ite1 = set1.iterator();
-        Iterator ite2 = set2.iterator();
+        // 首先检测项目集
+        Iterator ite = set2.iterator();
 
-        boolean isFullEqual = true;
+        boolean projectIsFullEqual = true;
 
-        while (ite2.hasNext()) {
-            if (!set1.contains(ite2.next())) {
-                isFullEqual = false;
+        while (ite.hasNext()) {
+            if (!set1.contains(ite.next())) {
+                projectIsFullEqual = false;
             }
         }
-        return isFullEqual;
+
+        // 接下来检测firstBa集合群，键值同时存在且相等
+        boolean firstBaIsFullEqual = true;
+
+        //TODO：改回正常的
+        if(this.firstBaMap.isEmpty() || state.firstBaMap.isEmpty()) {
+            firstBaIsFullEqual = false;
+        } else {
+            for (Lr1project projectItem : this.projectSet) {
+                if (state.projectSet.contains(projectItem)) {
+                    ite = state.firstBaMap.get(projectItem).iterator();
+                    while (ite.hasNext()) {
+                        if (!this.firstBaMap.get(projectItem).contains(ite.next())) {
+                            firstBaIsFullEqual = false;
+                        }
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        return projectIsFullEqual && firstBaIsFullEqual && (this.firstBaMap.size() == state.firstBaMap.size()) && (this.projectSet.size() == state.projectSet.size());
     }
 }
