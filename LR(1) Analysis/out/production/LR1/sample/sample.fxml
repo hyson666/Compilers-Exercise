@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
@@ -9,10 +10,25 @@
 <?import javafx.scene.control.Label?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="582.0" prefWidth="595.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <Button fx:id="openButton" layoutX="21.0" layoutY="25.0" mnemonicParsing="false" onMouseClicked="#openFile" text="打开文件" />
-      <TextArea fx:id="inputArea" layoutX="21.0" layoutY="77.0" prefHeight="200.0" prefWidth="200.0" />
-      <Button fx:id="startButton" layoutX="102.0" layoutY="25.0" mnemonicParsing="false" onMouseClicked="#startAnalyze" text="开始分析" />
+      <Button fx:id="openButton" layoutX="263.0" layoutY="44.0" mnemonicParsing="false" onMouseClicked="#openFile" text="打开文件" />
+      <TextArea fx:id="inputArea" layoutX="21.0" layoutY="77.0" prefHeight="148.0" prefWidth="317.0" />
+      <Button fx:id="startButton" layoutX="263.0" layoutY="233.0" mnemonicParsing="false" onMouseClicked="#startAnalyze" text="开始分析" />
+      <Label layoutX="21.0" layoutY="18.0" text="LR(1)文法分析器">
+         <font>
+            <Font size="17.0" />
+         </font>
+      </Label>
+      <Label layoutX="21.0" layoutY="238.0" text="输入分析串:" />
+      <Label layoutX="90.0" layoutY="49.0" text="By Hyson" />
+      <Label layoutX="21.0" layoutY="269.0" text="规范集族表:" />
+      <TableView fx:id="stateTableView" layoutX="22.0" layoutY="296.0" prefHeight="272.0" prefWidth="317.0">
+        <columns>
+          <TableColumn fx:id="stateIdColumn" prefWidth="36.0" text="状态" />
+          <TableColumn fx:id="projectItemsColumn" prefWidth="209.0" text="项目" />
+            <TableColumn fx:id="goNodesColumn" prefWidth="71.0" text="GOTO列表" />
+        </columns>
+      </TableView>
    </children>
 </AnchorPane>

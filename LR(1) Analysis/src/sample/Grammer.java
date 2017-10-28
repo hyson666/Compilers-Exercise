@@ -44,7 +44,7 @@ public class Grammer implements Serializable{
     private HashMap<Character, ArrayList<String>> expressionMap;
     private HashMap<Character, TreeSet<Character>> firstMap;
     private HashMap<Character, Integer> firstSetLength;
-    private HashMap<Integer, State> statesMap;
+    public HashMap<Integer, State> statesMap;
 
 
     private void setGsArray(ArrayList<String> gsArrary) {
@@ -198,6 +198,7 @@ public class Grammer implements Serializable{
                             // 获取当前表达式对应的firstBa映射
                             TreeSet<Character> tempfirstBaSet = tempState.firstBaMap.get(addProject);
                             // 不管发生什么先加入之前状态的,了里面只有一个'#'
+                            // TODO: 不是预先送入addall
                             if(!addFirstBaSet.contains('#')) {
                                 tempfirstBaSet.addAll(addFirstBaSet);
                             }
@@ -224,6 +225,7 @@ public class Grammer implements Serializable{
     /**
      * 初始化LR1项目规范族，这是一个递推的过程
      * 一直到延展不出新的状态的时候就结束！
+     * 在这里可以顺带把GOTO集维护了！如果有新产生的，该状态连边，若没有，则连接到已知状态！
      */
     private void initLr1ProjectsSet() {
         // 定义初始状态0
@@ -256,20 +258,8 @@ public class Grammer implements Serializable{
                     for (Lr1project projectItem : state.projectSet) {
                         Lr1project tempProject = checkNewProject(projectItem, nvntItem);
                         if (tempProject != null) {
-                            //TODO: 增广前先处理自己的firstBa！！
+                            //TODO: 循环增加firstBa！不用循环！子集加了自己有B数！一行搞定！
                             tempSet = new TreeSet<Character>();
-//                            if(tempProject.pos + 1 < tempProject.getRight().length()) {
-//                                Character nextChar = tempProject.getRight().charAt(tempProject.pos + 1);
-//                                // 同上区分是否终结符
-//                                if(ntSet.contains(nextChar)) {
-//                                    tempSet.add(nextChar);
-//                                } else {
-//                                    tempSet.addAll(firstMap.get(nextChar));
-//                                }
-//                            } else {
-//                                tempSet.add('#');
-//                            }
-                            //System.out.println(stateID);
                             if(stateID == 1 && nvntItem == 'a') {
                                 System.out.println("在这停顿！");
                             }
@@ -283,14 +273,32 @@ public class Grammer implements Serializable{
                             tempState = addProcToState(tempState,  addFirstBaSet);
                         }
                     }
+                    //TODO: 在这里维护GOTO集！
                     if (!statesMap.values().contains(tempState) && !tempState.projectSet.isEmpty()) {
                         statesMap.put(totalState, tempState);
+                        statesMap.get(stateID).gotoSet.add(totalState);
                         totalState++;
+                    } else {
+                        // 获取该存在状态的编号,连边
+                        Set set = statesMap.entrySet();
+                        Iterator iter = set.iterator();
+                        while(iter.hasNext()) {
+                            HashMap.Entry entry = (HashMap.Entry) iter.next();
+                            if(entry.getValue().equals(tempState)) {
+                                int toNode = (int) entry.getKey();
+                                statesMap.get(stateID).gotoSet.add(toNode);
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }while(totalState != lastTotal);
     }
+
+
+
+
 }
 
 /**
@@ -355,10 +363,12 @@ class State implements Cloneable {
     State() {
         projectSet = new HashSet<Lr1project>();
         firstBaMap = new HashMap<Lr1project, TreeSet<Character>>();
+        gotoSet = new TreeSet<Integer>();
     }
 
     public HashSet<Lr1project> projectSet;
     public HashMap<Lr1project, TreeSet<Character>> firstBaMap;
+    public TreeSet<Integer> gotoSet;
 
 
     @Override
