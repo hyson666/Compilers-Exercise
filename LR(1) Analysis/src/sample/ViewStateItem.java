@@ -7,6 +7,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 
+
+/**
+ * 状态表项
+ * @author HYSON
+ */
 public class ViewStateItem {
     public ViewStateItem(Integer stateId, HashMap<Integer, State> statesMap) {
         this.state = statesMap.get(stateId);

@@ -10,7 +10,7 @@
 <?import javafx.scene.control.Label?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="582.0" prefWidth="799.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="582.0" prefWidth="1162.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
       <Button fx:id="openButton" layoutX="263.0" layoutY="44.0" mnemonicParsing="false" onMouseClicked="#openFile" text="打开文件" />
       <TextArea fx:id="inputArea" layoutX="21.0" layoutY="77.0" prefHeight="148.0" prefWidth="317.0" />
@@ -30,6 +30,18 @@
             <TableColumn fx:id="goNodesColumn" minWidth="0.0" prefWidth="137.0" text="GOTO列表" />
         </columns>
       </TableView>
-      <TableView fx:id="actionGotoTableView" layoutX="354.0" layoutY="14.0" prefHeight="264.0" prefWidth="348.0" />
+      <TableView fx:id="actionGotoTableView" layoutX="354.0" layoutY="37.0" prefHeight="241.0" prefWidth="348.0" />
+      <TextField fx:id="inputStr" layoutX="96.0" layoutY="233.0" prefHeight="27.0" prefWidth="153.0" />
+      <TableView fx:id="mainControlTable" layoutX="722.0" layoutY="37.0" prefHeight="531.0" prefWidth="424.0">
+        <columns>
+          <TableColumn fx:id="stepIdColumn" prefWidth="46.0" text="步骤" />
+          <TableColumn fx:id="stateStackColumn" prefWidth="81.0" text="状态" />
+            <TableColumn fx:id="symbolStackColumn" prefWidth="98.0" text="符号" />
+            <TableColumn fx:id="inputStrColumn" prefWidth="93.0" text="输入串" />
+            <TableColumn fx:id="actionColumn" prefWidth="105.0" text="动作" />
+        </columns>
+      </TableView>
+      <Label layoutX="354.0" layoutY="10.0" text="Action/Goto表:" />
+      <Label layoutX="722.0" layoutY="10.0" text="主控程序分析步骤:" />
    </children>
 </AnchorPane>

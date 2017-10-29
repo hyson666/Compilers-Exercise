@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 /**
  * 根据当前状态，遍历Nv和Nt赋值
+ * @author HYSON
  */
 
 public class ViewActionGoto {

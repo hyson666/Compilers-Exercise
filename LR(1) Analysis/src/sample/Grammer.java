@@ -6,6 +6,11 @@ import javax.swing.*;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * LR1文法内置所有项目
+ * @author HYSON
+ */
+
 public class Grammer implements Serializable{
 
     Grammer(ArrayList<String> tempGsArray) {
@@ -43,7 +48,7 @@ public class Grammer implements Serializable{
      * 6. First集合长度映射firstSetLength
      * 7. 状态编号、项目集映射statesMap
      */
-    private HashMap<String, Integer> numOfGs;
+    public HashMap<String, Integer> numOfGs;
     private ArrayList<String> gsArray;
     public TreeSet<Character> nvSet;
     public TreeSet<Character> ntSet;
@@ -214,16 +219,14 @@ public class Grammer implements Serializable{
                             // 不存在才创建，否则会被覆盖的！
                             if(!tempState.firstBaMap.containsKey(addProject)) {
                                 tempState.firstBaMap.put(addProject, new TreeSet<Character>());
-                            } else {
-                                continue;
                             }
                             // 获取当前表达式对应的firstBa映射
                             TreeSet<Character> tempfirstBaSet = tempState.firstBaMap.get(addProject);
                             // 不管发生什么先加入之前状态的,了里面只有一个'#'
-                            // TODO: 不是预先送入addall
                             if(!addFirstBaSet.contains('#')) {
                                 tempfirstBaSet.addAll(addFirstBaSet);
                             }
+                            //TODO: 加入前面的a
                             if(tempProject.pos + 1 < tempProject.getRight().length()) {
                                 // 讨论后面一个是否终结符
                                 Character nextItem = tempProject.getRight().charAt(tempProject.pos + 1);
@@ -235,6 +238,7 @@ public class Grammer implements Serializable{
                             } else if (tempfirstBaSet.isEmpty()) {
                                 // 后面是末尾,而且目前为空,则加入'#'
                                 tempfirstBaSet.add('#');
+                                //tempfirstBaSet.addAll(tempState.firstBaMap.get(tempProject))
                             }
                         }
                     }

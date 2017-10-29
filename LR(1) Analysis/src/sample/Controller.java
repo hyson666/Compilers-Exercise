@@ -21,6 +21,7 @@ public class Controller {
     public Button openButton;
     public Button startButton;
     public TextArea inputArea;
+    public TextField inputStr;
 
     /**
      * 定义状态表的显示的变量
@@ -35,8 +36,20 @@ public class Controller {
      */
     public TableView<ViewActionGoto> actionGotoTableView;
 
+    /**
+     * 定义主控程序分析表
+     */
+    public TableView<AnalysisStep> mainControlTable;
+    public TableColumn<AnalysisStep, String> stepIdColumn;
+    public TableColumn<AnalysisStep, String> stateStackColumn;
+    public TableColumn<AnalysisStep, String> symbolStackColumn;
+    public TableColumn<AnalysisStep, String> inputStrColumn;
+    public TableColumn<AnalysisStep, String> actionColumn;
+
+
     private ArrayList<String> gsArrary = new ArrayList<String>();
     private Grammer lr1;
+    private MainControl mainControl;
 
 
     public void openFile() throws IOException {
@@ -71,6 +84,8 @@ public class Controller {
         lr1 = new Grammer(gsArrary);
         showStateTable();
         showActionGotoTable();
+        mainControl = new MainControl(inputStr.getText(), lr1);
+        showMainControlTable();
     }
 
 
@@ -93,6 +108,8 @@ public class Controller {
      * 由于是动态生成，不再全局定义表单项
      */
     private void showActionGotoTable() {
+        // 一定要记得初始化
+        actionGotoTableView.getColumns().clear();
         // 表单项
         TableColumn<ViewActionGoto, String> stateIdColumn2 = new TableColumn<ViewActionGoto, String>("状态");
         TableColumn<ViewActionGoto, String> actionColumn = new TableColumn<ViewActionGoto, String>("ACTION");
@@ -137,5 +154,20 @@ public class Controller {
         stateIdColumn2.setCellValueFactory(new PropertyValueFactory<ViewActionGoto, String>("stateid"));
         actionGotoTableView.getColumns().addAll(stateIdColumn2, actionColumn, gotoColumn);
         actionGotoTableView.setItems(data);
+    }
+
+    /**
+     * 打印主控分析表
+     */
+    void showMainControlTable() {
+        final ObservableList<AnalysisStep> data = FXCollections.observableArrayList();
+        data.addAll(mainControl.analysisSteps);
+        // 绑定数据
+        stepIdColumn.setCellValueFactory(new PropertyValueFactory<AnalysisStep, String>("stepId"));
+        stateStackColumn.setCellValueFactory(new PropertyValueFactory<AnalysisStep, String>("stateStack"));
+        inputStrColumn.setCellValueFactory(new PropertyValueFactory<AnalysisStep, String>("inputStack"));
+        symbolStackColumn.setCellValueFactory(new PropertyValueFactory<AnalysisStep, String>("symbolStr"));
+        actionColumn.setCellValueFactory(new PropertyValueFactory<AnalysisStep, String>("actionStr"));
+        mainControlTable.setItems(data);
     }
 }
