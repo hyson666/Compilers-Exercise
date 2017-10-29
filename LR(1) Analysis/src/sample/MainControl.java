@@ -27,9 +27,10 @@ public class MainControl {
     private void analysis() {
         stateStack.push(0);
         int stepId = 0;
-        String actionStr = "移入";
+        String actionStr = "初始化";
+        AnalysisStep lastStep;
         while(true) {
-            AnalysisStep lastStep = new AnalysisStep(++stepId, stateStack.toString(), inputStr, symbolStr, actionStr);
+            lastStep = new AnalysisStep(++stepId, stateStack.toString(), inputStr, symbolStr, actionStr);
             analysisSteps.add(lastStep);
             Integer nowState = stateStack.peek();
             HashMap<Character, String> actionMap = lr1.actionFuncMap.get(nowState);
@@ -49,7 +50,7 @@ public class MainControl {
                 symbolStr += inputStr.charAt(0);
                 inputStr = inputStr.substring(1);
             } else if (action.charAt(0) == 'r') {
-                actionStr = "移入";
+                //actionStr = "移入";
                 Integer procId = Integer.valueOf(action.substring(1));
                 Set<String> procSet = lr1.numOfGs.keySet();
                 // 查找对应表达式，进行算法操作
