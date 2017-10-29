@@ -193,58 +193,63 @@ public class Grammer implements Serializable{
      * @param tempState 临时状态
      * @return 增广后的状态
      */
-    private State addProcToState(State tempState, TreeSet<Character> addFirstBaSet) {
-        // 首先一定要对现有的表达式进行初始化（有的不用，没有的加,注意在加入表达式的过程中也要动态加入)
-        for(Lr1project tempProject : tempState.projectSet) {
-            if(!tempState.firstBaMap.containsKey(tempProject)) {
-                tempState.firstBaMap.put(tempProject, new TreeSet<Character>());
-            }
-        }
+    private State addProcToState(State tempState) {
         int lastSum = 0;
-
+        int nowSum = 0;
         do{
-            lastSum = tempState.projectSet.size();
-            // 制作状态副本
+            lastSum = nowSum;
             State copyState = (State) tempState.clone();
-            // 查看所有项目，寻找可以增广的（是非终结符的情况）
-            for(Lr1project tempProject : copyState.projectSet) {
-                if(tempProject.pos < tempProject.getRight().length()) {
-                    // TODO：注意等等操作这里的pos+1加入！！！！！！！！！
-                    Character nvItem = tempProject.getRight().charAt(tempProject.pos);
-                    //TODO: 加入firstBa集Here，只对非终结符拓展处理，这里开始曾广！！
+            for(Lr1project projectItem : copyState.projectSet) {
+                // 寻找非规约状态
+                if(projectItem.pos < projectItem.getRight().length()) {
+                    // 找到之后加入当前projectItem的firstBa
+                    Character nvItem = projectItem.getRight().charAt(projectItem.pos);
                     if(nvSet.contains(nvItem)) {
+                        // procItem是展开的符号
                         for(String procItem : expressionMap.get(nvItem)) {
+                            // 构造0项
                             Lr1project addProject = new Lr1project(nvItem + "->" + procItem, 0);
-                            tempState.projectSet.add(addProject);
-                            // 不存在才创建，否则会被覆盖的！
-                            if(!tempState.firstBaMap.containsKey(addProject)) {
+                            if(!tempState.projectSet.contains(addProject)) {
+                                tempState.projectSet.add(addProject);
                                 tempState.firstBaMap.put(addProject, new TreeSet<Character>());
                             }
-                            // 获取当前表达式对应的firstBa映射
-                            TreeSet<Character> tempfirstBaSet = tempState.firstBaMap.get(addProject);
-                            // 不管发生什么先加入之前状态的,了里面只有一个'#'
-                            if(!addFirstBaSet.contains('#')) {
-                                tempfirstBaSet.addAll(addFirstBaSet);
-                            }
-                            //TODO: 加入前面的a
-                            if(tempProject.pos + 1 < tempProject.getRight().length()) {
-                                // 讨论后面一个是否终结符
-                                Character nextItem = tempProject.getRight().charAt(tempProject.pos + 1);
-                                if(ntSet.contains(nextItem)) {
-                                    tempfirstBaSet.add(nextItem);
-                                } else {
-                                    tempfirstBaSet.addAll(firstMap.get(nextItem));
+                            // 加入firstBa，分两种情况：1.终结符(有无空）、2.非终结符
+                            if(projectItem.pos + 1 < projectItem.getRight().length()){
+                                Character nextChar = projectItem.getRight().charAt(projectItem.pos + 1);
+                                // 如果是非终结符的话直接加入就可以了（是把projectItem的firstB加入到新产生的addProject的firstBa集合中),注意有无存在，无++noSum
+                                if(ntSet.contains(nextChar) && !tempState.firstBaMap.get(addProject).contains(nextChar)) {
+                                    tempState.firstBaMap.get(addProject).add(nextChar);
+                                    nowSum++;
+                                } else if (nvSet.contains(nextChar)) {
+                                    for(Character firstItem : firstMap.get(nextChar)) {
+                                        if(!tempState.firstBaMap.get(addProject).contains(firstItem)) {
+                                            tempState.firstBaMap.get(addProject).add(firstItem);
+                                            nowSum++;
+                                        }
+                                    }
+                                    if(firstMap.get(nextChar).contains('ε')) {
+                                        for(Character tempProjectFirstBaItem : tempState.firstBaMap.get(projectItem)) {
+                                            if(!tempState.firstBaMap.get(addProject).contains(tempProjectFirstBaItem)) {
+                                                tempState.firstBaMap.get(addProject).add(tempProjectFirstBaItem);
+                                                nowSum++;
+                                            }
+                                        }
+                                    }
                                 }
-                            } else if (tempfirstBaSet.isEmpty()) {
-                                // 后面是末尾,而且目前为空,则加入'#'
-                                tempfirstBaSet.add('#');
-                                //tempfirstBaSet.addAll(tempState.firstBaMap.get(tempProject))
+                            } else {
+                                // 到尾巴了，直接加入firsta！
+                                for(Character tempProjectFirstBaItem : tempState.firstBaMap.get(projectItem)) {
+                                    if(!tempState.firstBaMap.get(addProject).contains(tempProjectFirstBaItem)) {
+                                        tempState.firstBaMap.get(addProject).add(tempProjectFirstBaItem);
+                                        nowSum++;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-        }while(tempState.projectSet.size() != lastSum);
+        }while(nowSum != lastSum);
         return tempState;
     }
 
@@ -261,7 +266,8 @@ public class Grammer implements Serializable{
         startState.projectSet.add(startProjects);
         TreeSet<Character> tempSet = new TreeSet<Character>();
         tempSet.add('#');
-        startState = addProcToState(startState, tempSet);
+        startState.firstBaMap.put(startProjects, tempSet);
+        startState = addProcToState(startState);
         startState.firstBaMap.put(startProjects, tempSet);
         statesMap.put(0,startState);
 
@@ -287,17 +293,13 @@ public class Grammer implements Serializable{
                         if (tempProject != null) {
                             //TODO: 循环增加firstBa！不用循环！子集加了自己有B数！一行搞定！
                             tempSet = new TreeSet<Character>();
-                            if(stateID == 1 && nvntItem == 'a') {
-                                System.out.println("在这停顿！");
-                            }
                             TreeSet<Character> addFirstBaSet = state.firstBaMap.get(projectItem);
                             tempSet.addAll(addFirstBaSet);
                             tempState.firstBaMap.put(tempProject, tempSet);
                             // 处理增广
                             tempState.projectSet.add(tempProject);
                             tempState.projectSet.remove(projectItem);
-                            //tempState = addProcToState(tempProject, tempState);
-                            tempState = addProcToState(tempState,  addFirstBaSet);
+                            tempState = addProcToState(tempState);
                         }
                     }
                     //TODO: 在这里维护GOTO集！

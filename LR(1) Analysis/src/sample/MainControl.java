@@ -35,6 +35,7 @@ public class MainControl {
             HashMap<Character, String> actionMap = lr1.actionFuncMap.get(nowState);
             HashMap<Character, Integer> gotoMap = lr1.gotoFuncMap.get(nowState);
             // 栈顶第一个符号
+            if(inputStr.length() == 0) break;
             Character nowChar = inputStr.charAt(0);
             // 确定是sx还是rx,sx是移入，rx是规约
             String action = actionMap.get(nowChar);

@@ -11,8 +11,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 1160, 580));
+        primaryStage.setTitle("LR(1)文法分析器  By Hyson");
+        primaryStage.setScene(new Scene(root, 1250, 580));
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 

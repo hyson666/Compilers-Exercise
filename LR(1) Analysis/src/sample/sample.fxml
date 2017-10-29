@@ -10,7 +10,7 @@
 <?import javafx.scene.control.Label?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="582.0" prefWidth="1162.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#startAnalyze" prefHeight="582.0" prefWidth="1241.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
       <Button fx:id="openButton" layoutX="263.0" layoutY="44.0" mnemonicParsing="false" onMouseClicked="#openFile" text="打开文件" />
       <TextArea fx:id="inputArea" layoutX="21.0" layoutY="77.0" prefHeight="148.0" prefWidth="317.0" />
@@ -23,16 +23,16 @@
       <Label layoutX="21.0" layoutY="238.0" text="输入分析串:" />
       <Label layoutX="90.0" layoutY="49.0" text="By Hyson" />
       <Label layoutX="21.0" layoutY="269.0" text="规范集族表:" />
-      <TableView fx:id="stateTableView" layoutX="22.0" layoutY="296.0" prefHeight="272.0" prefWidth="681.0">
+      <TableView fx:id="stateTableView" layoutX="22.0" layoutY="296.0" prefHeight="272.0" prefWidth="750.0">
         <columns>
           <TableColumn fx:id="stateIdColumn" prefWidth="50.0" text="状态" />
-          <TableColumn fx:id="projectItemsColumn" prefWidth="489.0" text="项目" />
-            <TableColumn fx:id="goNodesColumn" minWidth="0.0" prefWidth="137.0" text="GOTO列表" />
+          <TableColumn fx:id="projectItemsColumn" prefWidth="540.0" text="项目" />
+            <TableColumn fx:id="goNodesColumn" minWidth="0.0" prefWidth="159.0" text="GOTO列表" />
         </columns>
       </TableView>
-      <TableView fx:id="actionGotoTableView" layoutX="354.0" layoutY="37.0" prefHeight="241.0" prefWidth="348.0" />
+      <TableView fx:id="actionGotoTableView" layoutX="354.0" layoutY="37.0" prefHeight="241.0" prefWidth="418.0" />
       <TextField fx:id="inputStr" layoutX="96.0" layoutY="233.0" prefHeight="27.0" prefWidth="153.0" />
-      <TableView fx:id="mainControlTable" layoutX="722.0" layoutY="37.0" prefHeight="531.0" prefWidth="424.0">
+      <TableView fx:id="mainControlTable" layoutX="794.0" layoutY="37.0" prefHeight="525.0" prefWidth="424.0">
         <columns>
           <TableColumn fx:id="stepIdColumn" prefWidth="46.0" text="步骤" />
           <TableColumn fx:id="stateStackColumn" prefWidth="81.0" text="状态" />
@@ -42,6 +42,6 @@
         </columns>
       </TableView>
       <Label layoutX="354.0" layoutY="10.0" text="Action/Goto表:" />
-      <Label layoutX="722.0" layoutY="10.0" text="主控程序分析步骤:" />
+      <Label layoutX="794.0" layoutY="10.0" text="主控程序分析步骤:" />
    </children>
 </AnchorPane>
