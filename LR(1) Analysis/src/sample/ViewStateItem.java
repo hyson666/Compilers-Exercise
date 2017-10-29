@@ -12,7 +12,7 @@ public class ViewStateItem {
         this.state = statesMap.get(stateId);
         this.stateId = new SimpleIntegerProperty(stateId);
         this.projects = new SimpleStringProperty(projectsToString(this.state.projectSet, this.state.firstBaMap));
-        this.nodes = new SimpleStringProperty(nodesToString(this.state.gotoSet));
+        this.nodes = new SimpleStringProperty(nodesToString(this.state.goSet));
     }
 
     // 定义要初始化的数据

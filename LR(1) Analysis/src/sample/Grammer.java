@@ -1,8 +1,8 @@
 package sample;
 
-import apple.laf.JRSUIUtils;
 import javafx.beans.property.IntegerProperty;
 
+import javax.swing.*;
 import java.io.Serializable;
 import java.util.*;
 
@@ -11,6 +11,7 @@ public class Grammer implements Serializable{
     Grammer(ArrayList<String> tempGsArray) {
         super();
         // 初始化变量
+        numOfGs = new HashMap<String, Integer>();
         nvSet = new TreeSet<Character>();
         ntSet = new TreeSet<Character>();
         gsArray = new ArrayList<String>();
@@ -18,14 +19,18 @@ public class Grammer implements Serializable{
         firstMap = new HashMap<Character, TreeSet<Character>>();
         firstSetLength = new HashMap<Character, Integer>();
         statesMap = new HashMap<Integer, State>();
+        gotoFuncMap = new HashMap<Integer, HashMap<Character, Integer>>();   //状态->（getChar，目标态）；
+        actionFuncMap = new HashMap<Integer, HashMap<Character, String>>();
 
 
         // 计算分析器
         this.setGsArray(tempGsArray);
         this.getNvNt();
         this.initExpMaps();
+        this.getNumOfGs();
         this.getFirst();
         this.initLr1ProjectsSet();
+        this.makeActionFunc();
     }
 
     /**
@@ -38,13 +43,16 @@ public class Grammer implements Serializable{
      * 6. First集合长度映射firstSetLength
      * 7. 状态编号、项目集映射statesMap
      */
+    private HashMap<String, Integer> numOfGs;
     private ArrayList<String> gsArray;
-    private TreeSet<Character> nvSet;
-    private TreeSet<Character> ntSet;
+    public TreeSet<Character> nvSet;
+    public TreeSet<Character> ntSet;
     private HashMap<Character, ArrayList<String>> expressionMap;
     private HashMap<Character, TreeSet<Character>> firstMap;
     private HashMap<Character, Integer> firstSetLength;
     public HashMap<Integer, State> statesMap;
+    public HashMap<Integer, HashMap<Character,Integer>> gotoFuncMap;
+    public HashMap<Integer, HashMap<Character, String>> actionFuncMap;
 
 
     private void setGsArray(ArrayList<String> gsArrary) {
@@ -87,6 +95,20 @@ public class Grammer implements Serializable{
                 // 数组转为list然后放入表中
                 expArr.addAll(Arrays.asList(produceStr));
                 expressionMap.put(charItem, expArr);
+            }
+        }
+    }
+
+
+    /**
+     * 初始化每个产生式的编号，注意！是产生式！
+     */
+    private void getNumOfGs() {
+        int cnt = 0;
+        for(Character nvItem : nvSet) {
+            ArrayList<String> procList = expressionMap.get(nvItem);
+            for(String procItem : procList) {
+                numOfGs.put(nvItem + "->" + procItem, ++cnt);
             }
         }
     }
@@ -253,6 +275,7 @@ public class Grammer implements Serializable{
             lastTotal = totalState;
             for(Integer stateID : stateIdSet) {
                 State state = (State) statesMap.get(stateID).clone();
+                HashMap<Character, Integer> tempGo = new HashMap<Character, Integer>();
                 for (Character nvntItem : nvntSet) {
                     State tempState = new State();
                     for (Lr1project projectItem : state.projectSet) {
@@ -276,7 +299,9 @@ public class Grammer implements Serializable{
                     //TODO: 在这里维护GOTO集！
                     if (!statesMap.values().contains(tempState) && !tempState.projectSet.isEmpty()) {
                         statesMap.put(totalState, tempState);
-                        statesMap.get(stateID).gotoSet.add(totalState);
+                        statesMap.get(stateID).goSet.add(totalState);
+                        tempGo.put(nvntItem, totalState);
+                        gotoFuncMap.put(stateID, tempGo);
                         totalState++;
                     } else {
                         // 获取该存在状态的编号,连边
@@ -286,7 +311,9 @@ public class Grammer implements Serializable{
                             HashMap.Entry entry = (HashMap.Entry) iter.next();
                             if(entry.getValue().equals(tempState)) {
                                 int toNode = (int) entry.getKey();
-                                statesMap.get(stateID).gotoSet.add(toNode);
+                                statesMap.get(stateID).goSet.add(toNode);
+                                tempGo.put(nvntItem, toNode);
+                                gotoFuncMap.put(stateID, tempGo);
                                 break;
                             }
                         }
@@ -297,7 +324,48 @@ public class Grammer implements Serializable{
     }
 
 
-
+    /**
+     * 构造ACTION函数
+     * 算法位于龙书P163
+     */
+    private void makeActionFunc() {
+        for(Integer stateId : statesMap.keySet()) {
+            actionFuncMap.put(stateId, new HashMap<Character, String>());
+        }
+        Set<Integer> stateIdSet = statesMap.keySet();
+        for(Integer stateID : stateIdSet) {
+            State state = statesMap.get(stateID);
+            HashSet<Lr1project> projectSet = state.projectSet;
+            HashMap<Character, Integer> gotoFunc = gotoFuncMap.get(stateID);
+            HashMap<Character, String> actionFunc = actionFuncMap.get(stateID);
+            for(Lr1project projectItem : projectSet) {
+                // 符合要求再获取当前状态点值
+                if(projectItem.pos < projectItem.getRight().length()) {
+                    Character nowChar = projectItem.getRight().charAt(projectItem.pos);
+                    if(ntSet.contains(nowChar) && gotoFunc.containsKey(nowChar)) {
+                        // 情况1的处理,移入状态J（sj）
+                        int goNode = gotoFunc.get(nowChar);
+                        //actionFunc = new HashMap<Character, String>();
+                        actionFunc.put(nowChar, "S" + goNode);
+                    }
+                } else if (projectItem.pos == projectItem.getRight().length()) {
+                    // 情况2的处理
+                    actionFunc = actionFuncMap.get(stateID);
+                    TreeSet<Character> firstBaSet = state.firstBaMap.get(projectItem);
+                    for (Character ntItem : firstBaSet) {
+                        // ACTION(staid) -> get(a) -> action 即后面的是移动值、动作对
+                        //actionFunc = new HashMap<Character, String>();
+                        actionFunc.put(ntItem, "r"+numOfGs.get(projectItem.proc));
+                    }
+                }
+                if("S->E".equals(projectItem.proc) && projectItem.pos == 1) {
+                    actionFunc = actionFuncMap.get(stateID);
+                    //actionFunc = new HashMap<Character, String>();
+                    actionFunc.put('#', "acc");
+                }
+            }
+        }
+    }
 
 }
 
@@ -363,12 +431,12 @@ class State implements Cloneable {
     State() {
         projectSet = new HashSet<Lr1project>();
         firstBaMap = new HashMap<Lr1project, TreeSet<Character>>();
-        gotoSet = new TreeSet<Integer>();
+        goSet = new TreeSet<Integer>();
     }
 
     public HashSet<Lr1project> projectSet;
     public HashMap<Lr1project, TreeSet<Character>> firstBaMap;
-    public TreeSet<Integer> gotoSet;
+    public TreeSet<Integer> goSet;
 
 
     @Override
@@ -435,3 +503,4 @@ class State implements Cloneable {
         return projectIsFullEqual && firstBaIsFullEqual && (this.firstBaMap.size() == state.firstBaMap.size()) && (this.projectSet.size() == state.projectSet.size());
     }
 }
+

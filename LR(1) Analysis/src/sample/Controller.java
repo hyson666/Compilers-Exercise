@@ -3,17 +3,16 @@ package sample;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.omg.PortableInterceptor.INACTIVE;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.TreeSet;
 
 public class Controller {
 
@@ -31,6 +30,10 @@ public class Controller {
     public TableColumn<ViewStateItem, String> projectItemsColumn;
     public TableColumn<ViewStateItem, String> goNodesColumn;
 
+    /**
+     * 定义Action、GOTO表变量
+     */
+    public TableView<ViewActionGoto> actionGotoTableView;
 
     private ArrayList<String> gsArrary = new ArrayList<String>();
     private Grammer lr1;
@@ -67,6 +70,7 @@ public class Controller {
         initGs(gsArrary, inputArea);
         lr1 = new Grammer(gsArrary);
         showStateTable();
+        showActionGotoTable();
     }
 
 
@@ -82,5 +86,56 @@ public class Controller {
         projectItemsColumn.setCellValueFactory(new PropertyValueFactory<ViewStateItem, String>("projects"));
         goNodesColumn.setCellValueFactory(new PropertyValueFactory<ViewStateItem, String>("nodes"));
         stateTableView.setItems(data);
+    }
+
+    /**
+     * 打印ACTION、GOTO表
+     * 由于是动态生成，不再全局定义表单项
+     */
+    private void showActionGotoTable() {
+        // 表单项
+        TableColumn<ViewActionGoto, String> stateIdColumn2 = new TableColumn<ViewActionGoto, String>("状态");
+        TableColumn<ViewActionGoto, String> actionColumn = new TableColumn<ViewActionGoto, String>("ACTION");
+        TableColumn<ViewActionGoto, String> gotoColumn = new TableColumn<ViewActionGoto, String>("GOTO");
+
+        // 首先对ACTION区进行定义
+        final ObservableList<ViewActionGoto> data = FXCollections.observableArrayList();
+        TreeSet<Character> ntSet = new TreeSet<Character>();
+        ntSet.addAll(lr1.ntSet);
+        ntSet.add('#');
+        ArrayList<TableColumn<ViewActionGoto, String>> columnsArray = new ArrayList<TableColumn<ViewActionGoto, String>>();
+        int cnt = 0;
+        for(Character ntItem : ntSet) {
+            columnsArray.add(new TableColumn<ViewActionGoto, String>(ntItem.toString()));
+            actionColumn.getColumns().add(columnsArray.get(cnt));
+            cnt++;
+        }
+        for(Integer i = 0; i < ntSet.size(); ++i) {
+            Integer num = i + 1;
+            columnsArray.get(i).setCellValueFactory(new PropertyValueFactory<ViewActionGoto, String>("actionItem" + num.toString()));
+        }
+
+        // 再对GOTO区进行定义
+        cnt = 0;
+        ArrayList<TableColumn<ViewActionGoto, String>> columnsArray2 = new ArrayList<TableColumn<ViewActionGoto, String>>();
+        for(Character nvItem : lr1.nvSet) {
+            columnsArray2.add(new TableColumn<ViewActionGoto, String>(nvItem.toString()));
+            gotoColumn.getColumns().add(columnsArray2.get(cnt));
+            cnt++;
+        }
+        for(Integer i = 0; i < lr1.nvSet.size(); ++i) {
+            Integer num = i + 1;
+            columnsArray2.get(i).setCellValueFactory(new PropertyValueFactory<ViewActionGoto, String>("gotoItem" + num.toString()));
+        }
+
+        //计算数据
+        for(Integer stateId : lr1.statesMap.keySet()) {
+            data.add(new ViewActionGoto(stateId, lr1));
+        }
+
+        //绑定ID
+        stateIdColumn2.setCellValueFactory(new PropertyValueFactory<ViewActionGoto, String>("stateid"));
+        actionGotoTableView.getColumns().addAll(stateIdColumn2, actionColumn, gotoColumn);
+        actionGotoTableView.setItems(data);
     }
 }
