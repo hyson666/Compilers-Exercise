@@ -291,7 +291,7 @@ public class Grammer implements Serializable{
                     for (Lr1project projectItem : state.projectSet) {
                         Lr1project tempProject = checkNewProject(projectItem, nvntItem);
                         if (tempProject != null) {
-                            //TODO: 循环增加firstBa！不用循环！子集加了自己有B数！一行搞定！
+                            //TODO: 循环增加firstBa
                             tempSet = new TreeSet<Character>();
                             TreeSet<Character> addFirstBaSet = state.firstBaMap.get(projectItem);
                             tempSet.addAll(addFirstBaSet);
